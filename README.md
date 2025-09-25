@@ -1,0 +1,1 @@
+# practicum_yandex_food_calorie_predictor
