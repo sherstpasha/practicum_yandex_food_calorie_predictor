@@ -13,31 +13,20 @@ from torchvision.transforms import Normalize
 import timm
 from sklearn.preprocessing import MultiLabelBinarizer
 import numpy as np
+import torch
+
+cfg = timm.get_pretrained_cfg("efficientnet_b2")
 
 
-cfg = timm.get_pretrained_cfg("efficientnet_b1")
-
-train_trainsforms = Compose(
-    [
-        ToTensor(),
-        Resize(cfg.input_size[1:]),
-        Normalize(mean=cfg.mean, std=cfg.std, inplace=True),
-    ]
-)
-
-test_trainsforms = Compose(
-    [
-        ToTensor(),
-        Resize(cfg.input_size[1:]),
-        Normalize(mean=cfg.mean, std=cfg.std, inplace=True),
-    ]
-)
 
 
 class CaloriesDataset(Dataset):
     def __init__(self, dish_df, dish_images_path, ingredients_df, tranforms=None):
         self.dish_df = dish_df
         self.dish_images_path = dish_images_path
+
+        self.mass_min = self.dish_df["total_mass"].min()
+        self.mass_max = self.dish_df["total_mass"].max()
 
         all_ids = ingredients_df["id"].tolist()
         self.mlb = MultiLabelBinarizer(classes=all_ids)
@@ -59,6 +48,7 @@ class CaloriesDataset(Dataset):
 
         total_calories = self.dish_df.iloc[idx]["total_calories"]
         total_mass = self.dish_df.iloc[idx]["total_mass"]
+        total_mass = (total_mass - self.mass_min) / (self.mass_max - self.mass_min)
         ingredients = self.dish_df.iloc[idx]["ingredients"]
 
         ingredients_ids = [
@@ -66,10 +56,9 @@ class CaloriesDataset(Dataset):
             for token in ingredients.split(";")
         ]
         ingredients_vector = self.mlb.transform([ingredients_ids])[0]
+        features = np.concatenate([ingredients_vector, [total_mass]]).astype(np.float32)
 
-        features = np.concatenate([ingredients_vector, [total_mass]])
-
-        return img_rgb, features, total_calories
+        return img_rgb, torch.tensor(features, dtype=torch.float32), torch.tensor(total_calories, dtype=torch.float32)
 
 
 def decode_features(features, ingredients_df):
