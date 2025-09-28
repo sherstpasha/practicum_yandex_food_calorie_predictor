@@ -1,13 +1,15 @@
---index-url https://pypi.org/simple
 --extra-index-url https://download.pytorch.org/whl/cu118
 
 numpy>=1.19.0,<2.0
-torchvision==0.15.2+cu118
-torchaudio==2.0.2+cu118
+torch==2.2.2+cu118
+torchvision==0.17.2+cu118
+torchaudio==2.2.2+cu118
 
 timm>=0.9.2
+transformers==4.39.3
+scikit-learn
+tensorboard
+
 opencv-python
 pandas
 matplotlib
-scikit-learn
-tensorboard
