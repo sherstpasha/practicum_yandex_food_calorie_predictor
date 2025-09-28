@@ -13,3 +13,4 @@ tensorboard
 opencv-python
 pandas
 matplotlib
+gradio
